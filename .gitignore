@@ -5,3 +5,4 @@ __pycache__/
 *.pkl
 !saved_models/*.pkl
 !saved_encoders/*.pkl
+venv310/
