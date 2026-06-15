@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Load model and preprocessor
 print("Loading model...")
 model = joblib.load('saved_models/random_forest_model.pkl')
-preprocessor = joblib.load('saved_encoders/preprocessor.pkl')
+preprocessor = joblib.load('saved_models/preprocessor.pkl')
 print("Model loaded successfully!")
 
 # Create Flask app
@@ -43,19 +43,19 @@ def predict():
     """Make prediction for a single customer"""
     try:
         data = request.get_json()
-        
+
         # Create DataFrame
         df = pd.DataFrame([data])
-        
+
         # Add age group
         df['age_group'] = df['age'].apply(age_binning)
-        
+
         # Ensure all required columns exist
-        required_cols = ['age', 'job', 'marital', 'education', 'default', 
-                        'balance', 'housing', 'loan', 'contact', 'day', 
-                        'month', 'duration', 'campaign', 'pdays', 'previous', 
+        required_cols = ['age', 'job', 'marital', 'education', 'default',
+                        'balance', 'housing', 'loan', 'contact', 'day',
+                        'month', 'duration', 'campaign', 'pdays', 'previous',
                         'poutcome', 'age_group']
-        
+
         for col in required_cols:
             if col not in df.columns:
                 if col in ['default', 'contact', 'poutcome']:
@@ -66,21 +66,21 @@ def predict():
                     df[col] = 'may'
                 else:
                     df[col] = 'unknown'
-        
+
         # Transform
         processed = preprocessor.transform(df)
-        
+
         # Predict
         prediction = model.predict(processed)[0]
         probability = model.predict_proba(processed)[0][1]
-        
+
         return jsonify({
             'prediction': 'Yes' if prediction == 1 else 'No',
             'probability_yes': round(probability, 4),
             'probability_no': round(1 - probability, 4),
             'confidence_level': 'High' if probability >= 0.7 else ('Medium' if probability >= 0.4 else 'Low')
         })
-        
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
